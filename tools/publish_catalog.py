@@ -8,7 +8,7 @@ Actions (.github/workflows/build-catalog.yml репозитория катало
 если версия новее его каталога.
 
 manifest.json:
-    version       номер сборки (ГГГГММДДЧЧ по UTC), растёт с каждой сборкой
+    version       номер сборки (ГГГГММДДЧЧММ по UTC; старые — ГГГГММДДЧЧ), растёт с каждой сборкой
     identityHash  хэш схемы Room: приложение берёт файл, только если он
                   совпадает с его схемой (иначе нужна новая версия приложения)
     file          имя сжатого файла рядом с манифестом
@@ -63,7 +63,7 @@ def main():
         db.close()
 
     # Номер сборки пишет build_catalog.py; без файла — текущий час.
-    version = int(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H"))
+    version = int(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M"))
     if os.path.exists(CATALOG_INFO):
         with open(CATALOG_INFO, encoding="utf-8") as f:
             version = json.load(f)["version"]

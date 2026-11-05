@@ -951,7 +951,8 @@ def main():
         identity = json.load(f)["database"]["identityHash"]
     with open(OUTPUT_INFO, "w", encoding="utf-8") as f:
         json.dump({
-            "version": int(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H")),
+            # ГГГГММДДЧЧММ: две сборки за час не должны получить один номер.
+            "version": int(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M")),
             "identityHash": identity,
         }, f)
 

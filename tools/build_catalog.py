@@ -93,15 +93,6 @@ ADULT_CHANNEL_IDS = {
 }
 
 
-# Свой лимит ТВ-каналов для отдельных стран (иначе --tv-per-country).
-# США: живых каналов намного больше 300, при равных признаках отбор шёл по
-# алфавиту и терял хорошие каналы (Toonami Aftermath) — решение пользователя
-# 2026-11-05.
-TV_PER_COUNTRY_OVERRIDE = {
-    "US": 400,
-}
-
-
 def is_adult_name(*names):
     return any(name and ADULT_NAME_RE.search(name) for name in names)
 
@@ -530,7 +521,9 @@ def build_tv(index, max_streams, per_country, refresh):
     dropped = set()
     for country, rows in sorted(national_by_country.items()):
         rows.sort(key=rank)
-        limit = TV_PER_COUNTRY_OVERRIDE.get(country, per_country)
+        # 0 — без лимита (решение пользователя 2026-11-05: лимит ТВ убран,
+        # отбор по косвенным признакам терял ZDF, VOX, Cartoon Network).
+        limit = per_country if per_country > 0 else len(rows)
         dropped.update(row["id"] for row in rows[limit:])
         if len(rows) > limit:
             log("tv limit %s: kept %d of %d, first dropped: %s" % (
@@ -892,7 +885,7 @@ def main():
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--max-streams", type=int, default=5)
     parser.add_argument("--radio-per-country", type=int, default=300)
-    parser.add_argument("--tv-per-country", type=int, default=300)
+    parser.add_argument("--tv-per-country", type=int, default=0)
     args = parser.parse_args()
 
     with open(CITIES_JSON, encoding="utf-8") as f:

@@ -34,6 +34,7 @@ import sqlite3
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CATALOG_DB = os.path.join(ROOT, "app", "src", "main", "assets", "databases", "catalog.db")
+CATALOG_INFO = os.path.join(ROOT, "app", "src", "main", "assets", "databases", "catalog.json")
 
 
 def sha256(path):
@@ -61,7 +62,11 @@ def main():
     finally:
         db.close()
 
+    # Номер сборки пишет build_catalog.py; без файла — текущий час.
     version = int(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H"))
+    if os.path.exists(CATALOG_INFO):
+        with open(CATALOG_INFO, encoding="utf-8") as f:
+            version = json.load(f)["version"]
     name = "catalog-%d.db.gz" % version
 
     os.makedirs(args.out, exist_ok=True)

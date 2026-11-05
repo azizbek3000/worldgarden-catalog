@@ -48,6 +48,7 @@
 import argparse
 import collections
 import concurrent.futures
+import datetime
 import gzip
 import json
 import math
@@ -102,6 +103,9 @@ SCHEMA_JSON = os.path.join(
     ROOT, "app", "schemas", "com.asis.worldgarden.data.db.CatalogDatabase", "1.json"
 )
 OUTPUT_DB = os.path.join(ROOT, "app", "src", "main", "assets", "databases", "catalog.db")
+# Версия каталога рядом с базой: по ней приложение решает, новее ли скачанный
+# каталог, чем вшитый (data/CatalogUpdater, data/db/CatalogDatabase).
+OUTPUT_INFO = os.path.join(ROOT, "app", "src", "main", "assets", "databases", "catalog.json")
 
 RADIO_CACHE_DIR = os.path.join(ROOT, "tools", "cache", "radio")
 
@@ -928,6 +932,14 @@ def main():
         db.close()
 
     os.replace(temp_db, OUTPUT_DB)
+
+    with open(SCHEMA_JSON, encoding="utf-8") as f:
+        identity = json.load(f)["database"]["identityHash"]
+    with open(OUTPUT_INFO, "w", encoding="utf-8") as f:
+        json.dump({
+            "version": int(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H")),
+            "identityHash": identity,
+        }, f)
 
     for key in sorted(stats):
         log("%-30s %d" % (key, stats[key]))

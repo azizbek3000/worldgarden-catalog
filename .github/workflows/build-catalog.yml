@@ -8,6 +8,8 @@ on:
   schedule:
     - cron: "0 3 1 * *"   # 1-го числа каждого месяца, 03:00 UTC
   workflow_dispatch:
+  push:                   # и после каждой отправки скриптов в репозиторий
+    branches: [main]
 
 permissions:
   contents: read

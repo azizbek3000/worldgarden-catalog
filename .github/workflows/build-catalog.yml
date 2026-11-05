@@ -1,0 +1,55 @@
+# Сборка каталога World Garden раз в месяц и раздача через GitHub Pages:
+#   https://<логин>.github.io/worldgarden-catalog/manifest.json
+# Запустить вручную: вкладка Actions → Build catalog → Run workflow.
+
+name: Build catalog
+
+on:
+  schedule:
+    - cron: "0 3 1 * *"   # 1-го числа каждого месяца, 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download iptv-org streams
+        run: |
+          mkdir -p tools/cache/iptv
+          curl -fsSL --compressed -o tools/cache/iptv/streams.json \
+            https://iptv-org.github.io/api/streams.json
+
+      - name: Check streams
+        run: python tools/check_streams.py --recheck --workers 100
+
+      - name: Build catalog
+        run: python tools/build_catalog.py
+
+      - name: Pack catalog
+        run: python tools/publish_catalog.py --out site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,5 @@
+tools/cache/
+site/
+*.db
+*.db.tmp
+__pycache__/

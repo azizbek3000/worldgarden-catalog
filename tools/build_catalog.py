@@ -93,6 +93,15 @@ ADULT_CHANNEL_IDS = {
 }
 
 
+# Свой лимит ТВ-каналов для отдельных стран (иначе --tv-per-country).
+# США: живых каналов намного больше 300, при равных признаках отбор шёл по
+# алфавиту и терял хорошие каналы (Toonami Aftermath) — решение пользователя
+# 2026-11-05.
+TV_PER_COUNTRY_OVERRIDE = {
+    "US": 400,
+}
+
+
 def is_adult_name(*names):
     return any(name and ADULT_NAME_RE.search(name) for name in names)
 
@@ -519,9 +528,14 @@ def build_tv(index, max_streams, per_country, refresh):
             national_by_country[row["countryCode"]].append(row)
 
     dropped = set()
-    for rows in national_by_country.values():
+    for country, rows in sorted(national_by_country.items()):
         rows.sort(key=rank)
-        dropped.update(row["id"] for row in rows[per_country:])
+        limit = TV_PER_COUNTRY_OVERRIDE.get(country, per_country)
+        dropped.update(row["id"] for row in rows[limit:])
+        if len(rows) > limit:
+            log("tv limit %s: kept %d of %d, first dropped: %s" % (
+                country, limit, len(rows), ", ".join(row["name"] for row in rows[limit:limit + 5])
+            ))
 
     stats["skipped: over country limit"] = len(dropped)
 
